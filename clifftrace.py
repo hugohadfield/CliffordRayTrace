@@ -188,7 +188,7 @@ xmax = 1.0
 ymax  = xmax*(h*1.0/w)
 #No need to define the up vector since we're assuming it's e3 pre-transform.
 
-start_time = time.time()
+Ptl = f*1.0*e2 - e1*xmax + e3*ymax
 
 #Get all of the required initial transformations
 optic_axis = new_line(cam, lookat)
@@ -197,25 +197,30 @@ MVR = generate_translation_rotor(cam)*rotor_between_lines(original, optic_axis)
 dTx = MVR*generate_translation_rotor((2*xmax/(w-1))*e1)*~MVR
 dTy = MVR*generate_translation_rotor(-(2*ymax/(h-1))*e3)*~MVR
 
-Ptl = f*1.0*e2 - e1*xmax + e3*ymax
+def render_image():
 
-drawScene()
+    start_time = time.time()
 
-img = np.zeros((h, w, 3))
-initial = RMVR(up(Ptl))
-for i in range(0,w):
-    if (i%10 == 0):
-        print(i/w * 100 , "%")
-    point = initial
-    line = (upcam ^ initial ^ einf).normal()
-    for j in range(0, h):
-        img[j, i, :] = np.clip(trace_ray(line, scene, upcam, 0), 0, 1)
-        point = apply_rotor(point,dTy)
-        line = (upcam ^ point ^ einf).normal()
+    drawScene()
 
-    initial = apply_rotor(initial,dTx)
+    img = np.zeros((h, w, 3))
+    initial = RMVR(up(Ptl))
+    for i in range(0,w):
+        if (i%10 == 0):
+            print(i/w * 100 , "%")
+        point = initial
+        line = (upcam ^ initial ^ einf).normal()
+        for j in range(0, h):
+            img[j, i, :] = np.clip(trace_ray(line, scene, upcam, 0), 0, 1)
+            point = apply_rotor(point,dTy)
+            line = (upcam ^ point ^ einf).normal()
 
-plt.imsave('fig.png', img)
+        initial = apply_rotor(initial,dTx)
 
-print("\n\n")
-print("--- %s seconds ---" % (time.time() - start_time))
+    plt.imsave('fig.png', img)
+
+    print("\n\n")
+    print("--- %s seconds ---" % (time.time() - start_time))
+
+if __name__ == '__main__':
+    render_image()
